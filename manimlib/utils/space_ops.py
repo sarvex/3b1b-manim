@@ -30,7 +30,7 @@ def get_norm(vect):
 
 
 def quaternion_mult(*quats):
-    if len(quats) == 0:
+    if not quats:
         return [1, 0, 0, 0]
     result = quats[0]
     for next_quat in quats[1:]:
@@ -83,9 +83,7 @@ def rotate_vector(vector, angle, axis=OUT):
     else:
         raise Exception("vector must be of dimension 2 or 3")
 
-    if isinstance(vector, np.ndarray):
-        return np.array(result)
-    return result
+    return np.array(result) if isinstance(vector, np.ndarray) else result
 
 
 def thick_diagonal(dim, thickness=2):
@@ -148,10 +146,7 @@ def z_to_vector(vector):
     """
     axis = cross(OUT, vector)
     if get_norm(axis) == 0:
-        if vector[2] > 0:
-            return np.identity(3)
-        else:
-            return rotation_matrix(PI, RIGHT)
+        return np.identity(3) if vector[2] > 0 else rotation_matrix(PI, RIGHT)
     angle = np.arccos(np.dot(OUT, normalize(vector)))
     return rotation_matrix(angle, axis=axis)
 
@@ -212,9 +207,7 @@ def get_unit_normal(v1, v2, tol=1e-6):
         # Vectors align, so find a normal to them in the plane shared with the z-axis
         new_cp = cross(cross(v1, OUT), v1)
         new_cp_norm = get_norm(new_cp)
-        if new_cp_norm < tol:
-            return DOWN
-        return new_cp / new_cp_norm
+        return DOWN if new_cp_norm < tol else new_cp / new_cp_norm
     return cp / cp_norm
 
 
@@ -308,10 +301,8 @@ def get_closest_point_on_line(a, b, p):
     """
     # x = b + t*(a-b) = t*a + (1-t)*b
     t = np.dot(p - b, a - b) / np.dot(a - b, a - b)
-    if t < 0:
-        t = 0
-    if t > 1:
-        t = 1
+    t = max(t, 0)
+    t = min(t, 1)
     return ((t * a) + ((1 - t) * b))
 
 

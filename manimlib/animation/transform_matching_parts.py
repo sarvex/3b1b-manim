@@ -164,18 +164,14 @@ class TransformMatchingMTex(AnimationGroup):
             source_parts = func(source_mobject, source_attr)
             target_parts = func(target_mobject, target_attr)
             filtered_source_parts = [
-                submob_part for submob_part in source_parts
-                if all([
-                    submob in rest_source_submobs
-                    for submob in submob_part
-                ])
+                submob_part
+                for submob_part in source_parts
+                if all(submob in rest_source_submobs for submob in submob_part)
             ]
             filtered_target_parts = [
-                submob_part for submob_part in target_parts
-                if all([
-                    submob in rest_target_submobs
-                    for submob in submob_part
-                ])
+                submob_part
+                for submob_part in target_parts
+                if all(submob in rest_target_submobs for submob in submob_part)
             ]
             if not (filtered_source_parts and filtered_target_parts):
                 return

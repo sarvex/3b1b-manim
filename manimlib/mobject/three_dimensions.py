@@ -191,11 +191,13 @@ class Cube(SGroup):
     def square_to_cube_faces(square):
         radius = square.get_height() / 2
         square.move_to(radius * OUT)
-        result = [square]
-        result.extend([
-            square.copy().rotate(PI / 2, axis=vect, about_point=ORIGIN)
-            for vect in compass_directions(4)
-        ])
+        result = [
+            square,
+            *[
+                square.copy().rotate(PI / 2, axis=vect, about_point=ORIGIN)
+                for vect in compass_directions(4)
+            ],
+        ]
         result.append(square.copy().rotate(PI, RIGHT, about_point=ORIGIN))
         return result
 

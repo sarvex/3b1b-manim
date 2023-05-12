@@ -100,7 +100,7 @@ def random_bright_color():
 
 
 def random_color():
-    return Color(rgb=(random.random() for i in range(3)))
+    return Color(rgb=(random.random() for _ in range(3)))
 
 
 def get_colormap_list(map_name="viridis", n_colors=9):

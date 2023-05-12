@@ -150,13 +150,14 @@ class Laptop(VGroup):
         body.sort(lambda p: p[2])
         body[-1].set_fill(self.body_color)
         screen_plate = body.copy()
-        keyboard = VGroup(*[
-            VGroup(*[
-                Square(**self.key_color_kwargs)
-                for x in range(12 - y % 2)
-            ]).arrange(RIGHT, buff=SMALL_BUFF)
-            for y in range(4)
-        ]).arrange(DOWN, buff=MED_SMALL_BUFF)
+        keyboard = VGroup(
+            *[
+                VGroup(
+                    *[Square(**self.key_color_kwargs) for _ in range(12 - y % 2)]
+                ).arrange(RIGHT, buff=SMALL_BUFF)
+                for y in range(4)
+            ]
+        ).arrange(DOWN, buff=MED_SMALL_BUFF)
         keyboard.stretch_to_fit_width(
             self.keyboard_width_to_body_width * body.get_width(),
         )
@@ -220,7 +221,7 @@ class VideoSeries(VGroup):
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        videos = [VideoIcon() for x in range(self.num_videos)]
+        videos = [VideoIcon() for _ in range(self.num_videos)]
         VGroup.__init__(self, *videos, **kwargs)
         self.arrange()
         self.set_width(FRAME_WIDTH - MED_LARGE_BUFF)

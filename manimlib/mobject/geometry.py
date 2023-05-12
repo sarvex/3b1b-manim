@@ -85,8 +85,8 @@ class TipableVMobject(VMobject):
         Returns a tip that has been stylistically configured,
         but has not yet been given a position in space.
         """
-        config = dict()
-        config.update(self.tip_config)
+        config = {}
+        config |= self.tip_config
         config.update(kwargs)
         return ArrowTip(**config)
 
@@ -176,10 +176,7 @@ class TipableVMobject(VMobject):
         return self.get_points()[-2]
 
     def get_end(self):
-        if self.has_tip():
-            return self.tip.get_start()
-        else:
-            return VMobject.get_end(self)
+        return self.tip.get_start() if self.has_tip() else VMobject.get_end(self)
 
     def get_start(self):
         if self.has_start_tip():
@@ -228,7 +225,7 @@ class Arc(TipableVMobject):
         samples[1::2] /= np.cos(theta / 2)
 
         points = np.zeros((3 * n_components, 3))
-        points[0::3] = samples[0:-1:2]
+        points[::3] = samples[:-1:2]
         points[1::3] = samples[1::2]
         points[2::3] = samples[2::2]
         return points

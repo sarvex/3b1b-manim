@@ -300,12 +300,8 @@ class GraphScene(Scene):
         ).set_fill(opacity=self.area_opacity)
 
     def transform_between_riemann_rects(self, curr_rects, new_rects, **kwargs):
-        transform_kwargs = {
-            "run_time": 2,
-            "lag_ratio": 0.5
-        }
         added_anims = kwargs.get("added_anims", [])
-        transform_kwargs.update(kwargs)
+        transform_kwargs = {"run_time": 2, "lag_ratio": 0.5} | kwargs
         curr_rects.align_family(new_rects)
         x_coords = set()  # Keep track of new repetitions
         for rect in curr_rects:

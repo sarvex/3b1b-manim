@@ -27,10 +27,7 @@ def slow_into(t):
 
 
 def double_smooth(t):
-    if t < 0.5:
-        return 0.5 * smooth(2 * t)
-    else:
-        return 0.5 * (1 + smooth(2 * t - 1))
+    return 0.5 * smooth(2 * t) if t < 0.5 else 0.5 * (1 + smooth(2 * t - 1))
 
 
 def there_and_back(t):

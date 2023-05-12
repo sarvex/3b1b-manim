@@ -112,8 +112,7 @@ class ComplexTransformationScene(Scene):
         return self.background.number_to_point(z)
 
     def get_transformer(self, **kwargs):
-        transform_kwargs = dict(self.default_apply_complex_function_kwargs)
-        transform_kwargs.update(kwargs)
+        transform_kwargs = dict(self.default_apply_complex_function_kwargs) | kwargs
         transformer = VGroup()
         if hasattr(self, "plane"):
             self.prepare_for_transformation(self.plane)

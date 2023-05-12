@@ -226,12 +226,11 @@ class Mobject(object):
         ])
         if len(all_points) == 0:
             return np.zeros((3, self.dim))
-        else:
-            # Lower left and upper right corners
-            mins = all_points.min(0)
-            maxs = all_points.max(0)
-            mids = (mins + maxs) / 2
-            return np.array([mins, mids, maxs])
+        # Lower left and upper right corners
+        mins = all_points.min(0)
+        maxs = all_points.max(0)
+        mids = (mins + maxs) / 2
+        return np.array([mins, mids, maxs])
 
     def refresh_bounding_box(self, recurse_down=False, recurse_up=True):
         for mob in self.get_family(recurse_down):
@@ -274,10 +273,7 @@ class Mobject(object):
         return self
 
     def get_family(self, recurse=True):
-        if recurse:
-            return self.family
-        else:
-            return [self]
+        return self.family if recurse else [self]
 
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.has_points()]
@@ -371,8 +367,8 @@ class Mobject(object):
             if v_buff is None:
                 v_buff = v_buff_ratio * self[0].get_height()
 
-        x_unit = h_buff + max([sm.get_width() for sm in submobs])
-        y_unit = v_buff + max([sm.get_height() for sm in submobs])
+        x_unit = h_buff + max(sm.get_width() for sm in submobs)
+        y_unit = v_buff + max(sm.get_height() for sm in submobs)
 
         for index, sm in enumerate(submobs):
             if fill_rows_first:
@@ -385,9 +381,7 @@ class Mobject(object):
         return self
 
     def replicate(self, n):
-        return self.get_group_class()(
-            *(self.copy() for x in range(n))
-        )
+        return self.get_group_class()(*(self.copy() for _ in range(n)))
 
     def get_grid(self, n_rows, n_cols, height=None, **kwargs):
         """
@@ -463,20 +457,14 @@ class Mobject(object):
 
     def generate_target(self, use_deepcopy=False):
         self.target = None  # Prevent exponential explosion
-        if use_deepcopy:
-            self.target = self.deepcopy()
-        else:
-            self.target = self.copy()
+        self.target = self.deepcopy() if use_deepcopy else self.copy()
         return self.target
 
     def save_state(self, use_deepcopy=False):
         if hasattr(self, "saved_state"):
             # Prevent exponential growth of data
             self.saved_state = None
-        if use_deepcopy:
-            self.saved_state = self.deepcopy()
-        else:
-            self.saved_state = self.copy()
+        self.saved_state = self.deepcopy() if use_deepcopy else self.copy()
         return self
 
     def restore(self):
@@ -639,7 +627,7 @@ class Mobject(object):
 
     def apply_function(self, function, **kwargs):
         # Default to applying matrix about the origin, not mobjects center
-        if len(kwargs) == 0:
+        if not kwargs:
             kwargs["about_point"] = ORIGIN
         self.apply_points_function(
             lambda points: np.array([function(p) for p in points]),
@@ -763,9 +751,7 @@ class Mobject(object):
             return True
         if self.get_bottom()[1] > FRAME_Y_RADIUS:
             return True
-        if self.get_top()[1] < -FRAME_Y_RADIUS:
-            return True
-        return False
+        return self.get_top()[1] < -FRAME_Y_RADIUS
 
     def stretch_about_point(self, factor, dim, point):
         return self.stretch(factor, dim, about_point=point)
@@ -989,7 +975,7 @@ class Mobject(object):
         return self
 
     def set_submobject_colors_by_gradient(self, *colors):
-        if len(colors) == 0:
+        if not colors:
             raise Exception("Need at least one color")
         elif len(colors) == 1:
             return self.set_color(*colors)
@@ -1293,10 +1279,7 @@ class Mobject(object):
             # If empty, simply add n point mobjects
             null_mob = self.copy()
             null_mob.set_points([self.get_center()])
-            self.set_submobjects([
-                null_mob.copy()
-                for k in range(n)
-            ])
+            self.set_submobjects([null_mob.copy() for _ in range(n)])
             return self
         target = curr + n
         repeat_indices = (np.arange(target) * curr) // target
@@ -1307,7 +1290,7 @@ class Mobject(object):
         new_submobs = []
         for submob, sf in zip(self.submobjects, split_factors):
             new_submobs.append(submob)
-            for k in range(1, sf):
+            for _ in range(1, sf):
                 new_submob = submob.copy()
                 # If the submobject is at all transparent, then
                 # make the copy completely transparent
@@ -1328,11 +1311,7 @@ class Mobject(object):
             if key not in mobject1.data or key not in mobject2.data:
                 continue
 
-            if key in ("points", "bounding_box"):
-                func = path_func
-            else:
-                func = interpolate
-
+            func = path_func if key in ("points", "bounding_box") else interpolate
             self.data[key][:] = func(
                 mobject1.data[key],
                 mobject2.data[key],
@@ -1462,15 +1441,10 @@ class Mobject(object):
         # TODO, add a version of this which changes the point data instead
         # of the shader code
         for char in "xyz":
-            glsl_snippet = glsl_snippet.replace(char, "point." + char)
+            glsl_snippet = glsl_snippet.replace(char, f"point.{char}")
         rgb_list = get_colormap_list(colormap)
         self.set_color_by_code(
-            "color.rgb = float_to_color({}, {}, {}, {});".format(
-                glsl_snippet,
-                float(min_value),
-                float(max_value),
-                get_colormap_code(rgb_list)
-            )
+            f"color.rgb = float_to_color({glsl_snippet}, {float(min_value)}, {float(max_value)}, {get_colormap_code(rgb_list)});"
         )
         return self
 
@@ -1521,7 +1495,7 @@ class Mobject(object):
         # the given array, meaning its length has to be either 1
         # or the length of the array
         d_len = len(self.data[data_key])
-        if d_len != 1 and d_len != len(array):
+        if d_len not in [1, len(array)]:
             self.data[data_key] = resize_with_interpolation(
                 self.data[data_key], len(array)
             )
@@ -1654,7 +1628,7 @@ class Mobject(object):
 
 class Group(Mobject):
     def __init__(self, *mobjects, **kwargs):
-        if not all([isinstance(m, Mobject) for m in mobjects]):
+        if not all(isinstance(m, Mobject) for m in mobjects):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)

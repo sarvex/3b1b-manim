@@ -162,8 +162,7 @@ def parse_cli():
             "--log-level",
             help="Level of messages to Display, can be DEBUG / INFO / WARNING / ERROR / CRITICAL"
         )
-        args = parser.parse_args()
-        return args
+        return parser.parse_args()
     except argparse.ArgumentError as err:
         log.error(str(err))
         sys.exit(2)
@@ -314,10 +313,8 @@ def get_configuration(args):
         "preview": not write_file,
         "presenter_mode": args.presenter_mode,
         "leave_progress_bars": args.leave_progress_bars,
+        "camera_config": get_camera_configuration(args, custom_config),
     }
-
-    # Camera configuration
-    config["camera_config"] = get_camera_configuration(args, custom_config)
 
     # Default to making window half the screen size
     # but make it full screen if -f is passed in
@@ -346,7 +343,6 @@ def get_configuration(args):
 
 
 def get_camera_configuration(args, custom_config):
-    camera_config = {}
     camera_qualities = get_custom_config()["camera_qualities"]
     if args.low_quality:
         quality = camera_qualities["low"]
@@ -368,12 +364,11 @@ def get_camera_configuration(args, custom_config):
     width = int(width_str)
     height = int(height_str)
 
-    camera_config.update({
+    camera_config = {} | {
         "pixel_width": width,
         "pixel_height": height,
         "frame_rate": quality["frame_rate"],
-    })
-
+    }
     try:
         bg_color = args.color or custom_config["style"]["background_color"]
         camera_config["background_color"] = colour.Color(bg_color)

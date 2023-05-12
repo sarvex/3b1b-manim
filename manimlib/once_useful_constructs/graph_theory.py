@@ -294,9 +294,9 @@ class DiscreteGraphScene(Scene):
         pairs += [tuple(reversed(pair)) for pair in pairs]
         self.spanning_tree_index_pairs = []
         curr = root
-        spanned_vertices = set([curr])
-        to_check = set([curr])
-        while len(to_check) > 0:
+        spanned_vertices = {curr}
+        to_check = {curr}
+        while to_check:
             curr = to_check.pop()
             for pair in pairs:
                 if pair[0] == curr and pair[1] not in spanned_vertices:
@@ -391,7 +391,7 @@ class DiscreteGraphScene(Scene):
         for pair in self.graph.edges:
             dual_point_pair = []
             for cycle in cycles:
-                if not (pair[0] in cycle and pair[1] in cycle):
+                if pair[0] not in cycle or pair[1] not in cycle:
                     continue
                 index1, index2 = cycle.index(pair[0]), cycle.index(pair[1])
                 if abs(index1 - index2) in [1, len(cycle) - 1]:

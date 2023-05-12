@@ -27,7 +27,7 @@ def rotate(points, angle=np.pi, axis=OUT):
 
 
 def fractalify(vmobject, order=3, *args, **kwargs):
-    for x in range(order):
+    for _ in range(order):
         fractalification_iteration(vmobject)
     return vmobject
 
@@ -97,10 +97,7 @@ class SelfSimilarFractal(VMobject):
             result = self.get_seed_shape()
         else:
             lower_order = self.get_order_n_self(order - 1)
-            subparts = [
-                lower_order.copy()
-                for x in range(self.num_subparts)
-            ]
+            subparts = [lower_order.copy() for _ in range(self.num_subparts)]
             self.arrange_subparts(*subparts)
             result = VGroup(*subparts)
 
@@ -218,7 +215,7 @@ class PiCreatureFractal(VMobject):
         seed.to_edge(DOWN)
         creatures = [seed]
         self.add(VGroup(seed))
-        for x in range(self.order):
+        for _ in range(self.order):
             new_creatures = []
             for creature in creatures:
                 for eye, vect in zip(creature.eyes, [LEFT, RIGHT]):
@@ -350,17 +347,14 @@ class LindenmayerCurve(FractalCurve):
     }
 
     def expand_command_string(self, command):
-        result = ""
-        for letter in command:
-            if letter in self.rule:
-                result += self.rule[letter]
-            else:
-                result += letter
-        return result
+        return "".join(
+            self.rule[letter] if letter in self.rule else letter
+            for letter in command
+        )
 
     def get_command_string(self):
         result = self.axiom
-        for x in range(self.order):
+        for _ in range(self.order):
             result = self.expand_command_string(result)
         return result
 
@@ -416,7 +410,7 @@ class SelfSimilarSpaceFillingCurve(FractalCurve):
 
     def get_anchor_points(self):
         points = np.zeros((1, 3))
-        for count in range(self.order):
+        for _ in range(self.order):
             points = self.refine_into_subparts(points)
         return points
 
@@ -662,15 +656,12 @@ class SnakeCurve(FractalCurve):
         resolution = 2**self.order
         step = 2.0 * self.radius / resolution
         lower_left = ORIGIN + \
-            LEFT * (self.radius - step / 2) + \
-            DOWN * (self.radius - step / 2)
+                LEFT * (self.radius - step / 2) + \
+                DOWN * (self.radius - step / 2)
 
         for y in range(resolution):
             x_range = list(range(resolution))
             if y % 2 == 0:
                 x_range.reverse()
-            for x in x_range:
-                result.append(
-                    lower_left + x * step * RIGHT + y * step * UP
-                )
+            result.extend(lower_left + x * step * RIGHT + y * step * UP for x in x_range)
         return result

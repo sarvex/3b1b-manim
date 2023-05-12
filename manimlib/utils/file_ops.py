@@ -56,18 +56,16 @@ def get_sorted_integer_files(directory,
                              ):
     indexed_files = []
     for file in os.listdir(directory):
-        if '.' in file:
-            index_str = file[:file.index('.')]
-        else:
-            index_str = file
-
+        index_str = file[:file.index('.')] if '.' in file else file
         full_path = os.path.join(directory, file)
         if index_str.isdigit():
             index = int(index_str)
-            if remove_indices_greater_than is not None:
-                if index > remove_indices_greater_than:
-                    os.remove(full_path)
-                    continue
+            if (
+                remove_indices_greater_than is not None
+                and index > remove_indices_greater_than
+            ):
+                os.remove(full_path)
+                continue
             if extension is not None and not file.endswith(extension):
                 continue
             if index >= min_index and index < max_index:

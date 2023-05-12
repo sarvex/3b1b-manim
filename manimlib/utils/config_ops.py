@@ -33,7 +33,7 @@ def digest_config(obj, kwargs, caller_locals={}):
     # Assemble list of CONFIGs from all super classes
     classes_in_hierarchy = [obj.__class__]
     static_configs = []
-    while len(classes_in_hierarchy) > 0:
+    while classes_in_hierarchy:
         Class = classes_in_hierarchy.pop()
         classes_in_hierarchy += Class.__bases__
         if hasattr(Class, "CONFIG"):
@@ -56,7 +56,7 @@ def merge_dicts_recursively(*dicts):
 
     When values are dictionaries, it is applied recursively
     """
-    result = dict()
+    result = {}
     all_items = it.chain(*[d.items() for d in dicts])
     for key, value in all_items:
         if key in result and isinstance(result[key], dict) and isinstance(value, dict):

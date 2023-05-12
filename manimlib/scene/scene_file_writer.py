@@ -88,23 +88,20 @@ class SceneFileWriter(object):
     def get_resolution_directory(self):
         pixel_height = self.scene.camera.pixel_height
         frame_rate = self.scene.camera.frame_rate
-        return "{}p{}".format(
-            pixel_height, frame_rate
-        )
+        return f"{pixel_height}p{frame_rate}"
 
     # Directory getters
     def get_image_file_path(self):
         return self.image_file_path
 
     def get_next_partial_movie_path(self):
-        result = os.path.join(
+        return os.path.join(
             self.partial_movie_directory,
             "{:05}{}".format(
                 self.scene.num_plays,
                 self.movie_file_extension,
-            )
+            ),
         )
-        return result
 
     def get_movie_file_path(self):
         return self.movie_file_path
@@ -180,7 +177,7 @@ class SceneFileWriter(object):
     def open_movie_pipe(self, file_path):
         stem, ext = os.path.splitext(file_path)
         self.final_file_path = file_path
-        self.temp_file_path = stem + "_temp" + ext
+        self.temp_file_path = f"{stem}_temp{ext}"
 
         fps = self.scene.camera.frame_rate
         width, height = self.scene.camera.get_pixel_shape()
@@ -228,7 +225,7 @@ class SceneFileWriter(object):
         file = os.path.split(self.get_movie_file_path())[1]
         full_desc = f"Rendering {file} ({sub_desc})"
         if len(full_desc) > desc_len:
-            full_desc = full_desc[:desc_len - 4] + "...)"
+            full_desc = f"{full_desc[:desc_len - 4]}...)"
         else:
             full_desc += " " * (desc_len - len(full_desc))
         self.progress_display.set_description(full_desc)
@@ -299,14 +296,14 @@ class SceneFileWriter(object):
     def add_sound_to_video(self):
         movie_file_path = self.get_movie_file_path()
         stem, ext = os.path.splitext(movie_file_path)
-        sound_file_path = stem + ".wav"
+        sound_file_path = f"{stem}.wav"
         # Makes sure sound file length will match video file
         self.add_audio_segment(AudioSegment.silent(0))
         self.audio_segment.export(
             sound_file_path,
             bitrate='312k',
         )
-        temp_file_path = stem + "_temp" + ext
+        temp_file_path = f"{stem}_temp{ext}"
         commands = [
             FFMPEG_BIN,
             "-i", movie_file_path,
@@ -372,10 +369,8 @@ class SceneFileWriter(object):
 
                 commands.append(file_path)
 
-                FNULL = open(os.devnull, 'w')
-                sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
-                FNULL.close()
-
+                with open(os.devnull, 'w') as FNULL:
+                    sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
         if self.quiet:
             sys.stdout.close()
             sys.stdout = curr_stdout

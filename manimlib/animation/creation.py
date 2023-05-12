@@ -141,10 +141,7 @@ class Write(DrawBorderThenFill):
     def set_default_config_from_length(self, mobject):
         length = len(mobject.family_members_with_points())
         if self.run_time is None:
-            if length < 15:
-                self.run_time = 1
-            else:
-                self.run_time = 2
+            self.run_time = 1 if length < 15 else 2
         if self.lag_ratio is None:
             self.lag_ratio = min(4.0 / (length + 1.0), 0.2)
 

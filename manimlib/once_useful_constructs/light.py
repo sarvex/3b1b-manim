@@ -49,12 +49,13 @@ class SwitchOn(LaggedStartMap):
     }
 
     def __init__(self, light, **kwargs):
-        if (not isinstance(light, AmbientLight) and not isinstance(light, Spotlight)):
+        if isinstance(light, (AmbientLight, Spotlight)):
+            LaggedStartMap.__init__(
+                self, FadeIn, light, **kwargs
+            )
+        else:
             raise Exception(
                 "Only AmbientLights and Spotlights can be switched on")
-        LaggedStartMap.__init__(
-            self, FadeIn, light, **kwargs
-        )
 
 
 class SwitchOff(LaggedStartMap):
@@ -163,22 +164,16 @@ class Spotlight(VMobject):
     }
 
     def projection_direction(self):
-        # Note: This seems reasonable, though for it to work you'd
-        # need to be sure that any 3d scene including a spotlight
-        # somewhere assigns that spotlights "camera" attribute
-        # to be the camera associated with that scene.
         if self.camera_mob is None:
             return OUT
-        else:
-            [phi, theta, r] = self.camera_mob.get_center()
-            v = np.array([np.sin(phi) * np.cos(theta),
-                          np.sin(phi) * np.sin(theta), np.cos(phi)])
-            return v  # /get_norm(v)
+        [phi, theta, r] = self.camera_mob.get_center()
+        return np.array(
+            [np.sin(phi) * np.cos(theta), np.sin(phi) * np.sin(theta), np.cos(phi)]
+        )
 
     def project(self, point):
         v = self.projection_direction()
-        w = project_along_vector(point, v)
-        return w
+        return project_along_vector(point, v)
 
     def get_source_point(self):
         return self.source_point.get_location()
@@ -315,11 +310,9 @@ class Spotlight(VMobject):
         self.opacity_function = new_f
         dr = self.radius / self.num_levels
 
-        sectors = []
-        for submob in self.submobjects:
-            if type(submob) == AnnularSector:
-                sectors.append(submob)
-
+        sectors = [
+            submob for submob in self.submobjects if type(submob) == AnnularSector
+        ]
         for (r, submob) in zip(np.arange(0, self.radius, dr), sectors):
             if type(submob) != AnnularSector:
                 # it's the shadow, don't dim it
@@ -520,17 +513,15 @@ class LightSource(VMobject):
             [0, 0, 1]
         ])
 
-        R = np.dot(R2, R1)
-        return R
+        return np.dot(R2, R1)
 
     def update_shadow(self):
         point = self.get_source_point()
-        projected_screen_points = []
         if not self.has_screen():
             return
-        for point in self.screen.get_anchors():
-            projected_screen_points.append(self.spotlight.project(point))
-
+        projected_screen_points = [
+            self.spotlight.project(point) for point in self.screen.get_anchors()
+        ]
         projected_source = project_along_vector(
             self.get_source_point(), self.spotlight.projection_direction())
 

@@ -178,16 +178,14 @@ class _TexParser(object):
             if not match_objs:
                 continue
             self.specified_substrings.append(string)
-            for match_obj in match_objs:
-                all_tex_spans.append(match_obj.span())
-
+            all_tex_spans.extend(match_obj.span() for match_obj in match_objs)
         former_script_spans_dict = dict([
             script_span_pair[0][::-1]
             for script_span_pair in self.neighbouring_script_span_pairs
         ])
         for span_begin, span_end in all_tex_spans:
             # Deconstruct spans containing one out of two scripts.
-            if span_end in former_script_spans_dict.keys():
+            if span_end in former_script_spans_dict:
                 span_end = former_script_spans_dict[span_end]
                 if span_begin >= span_end:
                     continue
@@ -256,19 +254,22 @@ class _TexParser(object):
             return range(submob_indices[0], submob_indices[-1] + 1)
 
         filtered_script_span_pairs = filter(
-            lambda script_span_pair: all([
+            lambda script_span_pair: all(
                 self.script_span_to_char_dict[script_span] == character
                 for script_span, character in zip(script_span_pair, "_^")
-            ]),
-            self.neighbouring_script_span_pairs
+            ),
+            self.neighbouring_script_span_pairs,
         )
-        switch_range_pairs = sorted([
-            tuple([
-                script_span_to_submob_range(script_span)
-                for script_span in script_span_pair
-            ])
-            for script_span_pair in filtered_script_span_pairs
-        ], key=lambda t: (t[0].stop, -t[0].start))
+        switch_range_pairs = sorted(
+            [
+                tuple(
+                    script_span_to_submob_range(script_span)
+                    for script_span in script_span_pair
+                )
+                for script_span_pair in filtered_script_span_pairs
+            ],
+            key=lambda t: (t[0].stop, -t[0].start),
+        )
         result = list(range(len(submob_labels)))
         for range_0, range_1 in switch_range_pairs:
             result = [
@@ -569,13 +570,14 @@ class MTex(_TexSVG):
         return self
 
     def indices_of_part(self, part):
-        indices = [
-            index for index, submob in enumerate(self.submobjects)
+        if indices := [
+            index
+            for index, submob in enumerate(self.submobjects)
             if submob in part
-        ]
-        if not indices:
+        ]:
+            return indices
+        else:
             raise ValueError("Failed to find part in tex")
-        return indices
 
     def indices_of_part_by_tex(self, tex, index=0):
         part = self.get_part_by_tex(tex, index=index)

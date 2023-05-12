@@ -106,11 +106,7 @@ class VMobject(Mobject):
         return self
 
     def set_rgba_array(self, rgba_array, name=None, recurse=False):
-        if name is None:
-            names = ["fill_rgba", "stroke_rgba"]
-        else:
-            names = [name]
-
+        names = ["fill_rgba", "stroke_rgba"] if name is None else [name]
         for name in names:
             super().set_rgba_array(rgba_array, name, recurse)
         return self
@@ -286,9 +282,7 @@ class VMobject(Mobject):
         return self.get_stroke_opacities()[0]
 
     def get_color(self):
-        if self.has_fill():
-            return self.get_fill_color()
-        return self.get_stroke_color()
+        return self.get_fill_color() if self.has_fill() else self.get_stroke_color()
 
     def has_stroke(self):
         return self.get_stroke_widths().any() and self.get_stroke_opacities().any()
@@ -705,10 +699,7 @@ class VMobject(Mobject):
         nppc = self.n_points_per_curve
 
         def get_nth_subpath(path_list, n):
-            if n >= len(path_list):
-                # Create a null path at the very end
-                return [path_list[-1][-1]] * nppc
-            return path_list[n]
+            return [path_list[-1][-1]] * nppc if n >= len(path_list) else path_list[n]
 
         for n in range(n_subpaths):
             sp1 = get_nth_subpath(subpaths1, n)
@@ -751,9 +742,9 @@ class VMobject(Mobject):
             ipc = np.round(n * norms / sum(norms)).astype(int)
 
         diff = n - sum(ipc)
-        for x in range(diff):
+        for _ in range(diff):
             ipc[np.argmin(ipc)] += 1
-        for x in range(-diff):
+        for _ in range(-diff):
             ipc[np.argmax(ipc)] -= 1
 
         new_points = []
@@ -771,7 +762,7 @@ class VMobject(Mobject):
         if self.has_fill():
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
-            if len(tri1) != len(tri1) or not np.all(tri1 == tri2):
+            if False or not np.all(tri1 == tri2):
                 self.refresh_triangulation()
         return self
 
@@ -809,7 +800,7 @@ class VMobject(Mobject):
         else:
             low_tup = partial_quadratic_bezier_points(vm_points[i1:i2], lower_residue, 1)
             high_tup = partial_quadratic_bezier_points(vm_points[i3:i4], 0, upper_residue)
-            new_points[0:i1] = low_tup[0]
+            new_points[:i1] = low_tup[0]
             new_points[i1:i2] = low_tup
             # Keep new_points i2:i3 as they are
             new_points[i3:i4] = high_tup
@@ -851,7 +842,7 @@ class VMobject(Mobject):
             points = np.dot(points, z_to_vector(normal_vector))
         indices = np.arange(len(points), dtype=int)
 
-        b0s = points[0::3]
+        b0s = points[::3]
         b1s = points[1::3]
         b2s = points[2::3]
         v01s = b1s - b0s
@@ -868,11 +859,13 @@ class VMobject(Mobject):
         concave_parts = convexities < 0
 
         # These are the vertices to which we'll apply a polygon triangulation
-        inner_vert_indices = np.hstack([
-            indices[0::3],
-            indices[1::3][concave_parts],
-            indices[2::3][end_of_loop],
-        ])
+        inner_vert_indices = np.hstack(
+            [
+                indices[::3],
+                indices[1::3][concave_parts],
+                indices[2::3][end_of_loop],
+            ]
+        )
         inner_vert_indices.sort()
         rings = np.arange(1, len(inner_vert_indices) + 1)[inner_vert_indices % 3 == 2]
 
@@ -1031,7 +1024,7 @@ class VMobject(Mobject):
 
 class VGroup(VMobject):
     def __init__(self, *vmobjects, **kwargs):
-        if not all([isinstance(m, VMobject) for m in vmobjects]):
+        if not all(isinstance(m, VMobject) for m in vmobjects):
             raise Exception("All submobjects must be of type VMobject")
         super().__init__(**kwargs)
         self.add(*vmobjects)

@@ -28,8 +28,8 @@ class ShaderWrapper(object):
         self.vert_indices = vert_indices
         self.vert_attributes = vert_data.dtype.names
         self.shader_folder = shader_folder
-        self.uniforms = uniforms or dict()
-        self.texture_paths = texture_paths or dict()
+        self.uniforms = uniforms or {}
+        self.texture_paths = texture_paths or {}
         self.depth_test = depth_test
         self.render_primitive = str(render_primitive)
         self.init_program_code()
@@ -104,7 +104,7 @@ class ShaderWrapper(object):
 
     def combine_with(self, *shader_wrappers):
         # Assume they are of the same type
-        if len(shader_wrappers) == 0:
+        if not shader_wrappers:
             return
         if self.vert_indices is not None:
             num_verts = len(self.vert_data)

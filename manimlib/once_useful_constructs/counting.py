@@ -44,10 +44,10 @@ class CountingScene(Scene):
         down_right = (0.5) * RIGHT + (np.sqrt(3) / 2) * DOWN
         result = []
         for down_right_steps in range(5):
-            for left_steps in range(down_right_steps):
-                result.append(
-                    down_right_steps * down_right + left_steps * LEFT
-                )
+            result.extend(
+                down_right_steps * down_right + left_steps * LEFT
+                for left_steps in range(down_right_steps)
+            )
         return reversed(result[:self.get_place_max(place)])
 
     def get_dot_template(self, place):
@@ -79,7 +79,7 @@ class CountingScene(Scene):
         self.curr_configurations.append(VGroup())
 
     def count(self, max_val, run_time_per_anim=1):
-        for x in range(max_val):
+        for _ in range(max_val):
             self.increment(run_time_per_anim)
 
     def increment(self, run_time_per_anim=1):
@@ -202,11 +202,11 @@ class CountInDecimal(PowerCounter):
     }
 
     def construct(self):
-        for x in range(11):
+        for _ in range(11):
             self.increment()
-        for x in range(85):
+        for _ in range(85):
             self.increment(0.25)
-        for x in range(20):
+        for _ in range(20):
             self.increment()
 
 
@@ -257,7 +257,4 @@ class FactorialBase(CountingScene):
         return (num / self.factorial(place + 1)) % self.get_place_max(place)
 
     def factorial(self, n):
-        if (n == 1):
-            return 1
-        else:
-            return n * self.factorial(n - 1)
+        return 1 if (n == 1) else n * self.factorial(n - 1)

@@ -376,12 +376,10 @@ class Camera(object):
         vbo = self.ctx.buffer(shader_wrapper.vert_data.tobytes())
         if shader_wrapper.vert_indices is None:
             ibo = None
+        elif vert_index_data := shader_wrapper.vert_indices.astype('i4').tobytes():
+            ibo = self.ctx.buffer(vert_index_data)
         else:
-            vert_index_data = shader_wrapper.vert_indices.astype('i4').tobytes()
-            if vert_index_data:
-                ibo = self.ctx.buffer(vert_index_data)
-            else:
-                ibo = None
+            ibo = None
 
         # Program and vertex array
         shader_program, vert_format = self.get_shader_program(shader_wrapper)
@@ -491,8 +489,7 @@ class Camera(object):
         return self.path_to_texture[path][0]
 
     def release_texture(self, path):
-        tid_and_texture = self.path_to_texture.pop(path, None)
-        if tid_and_texture:
+        if tid_and_texture := self.path_to_texture.pop(path, None):
             tid_and_texture[1].release()
         return self
 

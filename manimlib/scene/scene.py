@@ -184,17 +184,16 @@ class Scene(object):
             mobject.update(dt)
 
     def should_update_mobjects(self):
-        return self.always_update_mobjects or any([
-            len(mob.get_family_updaters()) > 0
-            for mob in self.mobjects
-        ])
+        return self.always_update_mobjects or any(
+            len(mob.get_family_updaters()) > 0 for mob in self.mobjects
+        )
 
     def has_time_based_updaters(self):
-        return any([
+        return any(
             sm.has_time_based_updater()
             for mob in self.mobjects()
             for sm in mob.get_family()
-        ])
+        )
 
     # Related to time
     def get_time(self):
@@ -211,11 +210,9 @@ class Scene(object):
         families = [m.get_family() for m in mobjects]
 
         def is_top_level(mobject):
-            num_families = sum([
-                (mobject in family)
-                for family in families
-            ])
+            num_families = sum(mobject in family for family in families)
             return num_families == 1
+
         return list(filter(is_top_level, mobjects))
 
     def get_mobject_family_members(self):
@@ -274,21 +271,29 @@ class Scene(object):
         """
         if search_set is None:
             search_set = self.mobjects
-        for mobject in reversed(search_set):
-            if mobject.is_point_touching(point, buff=buff):
-                return mobject
-        return None
+        return next(
+            (
+                mobject
+                for mobject in reversed(search_set)
+                if mobject.is_point_touching(point, buff=buff)
+            ),
+            None,
+        )
 
     # Related to skipping
     def update_skipping_status(self):
-        if self.start_at_animation_number is not None:
-            if self.num_plays == self.start_at_animation_number:
-                self.skip_time = self.time
-                if not self.original_skipping_status:
-                    self.stop_skipping()
-        if self.end_at_animation_number is not None:
-            if self.num_plays >= self.end_at_animation_number:
-                raise EndSceneEarlyException()
+        if (
+            self.start_at_animation_number is not None
+            and self.num_plays == self.start_at_animation_number
+        ):
+            self.skip_time = self.time
+            if not self.original_skipping_status:
+                self.stop_skipping()
+        if (
+            self.end_at_animation_number is not None
+            and self.num_plays >= self.end_at_animation_number
+        ):
+            raise EndSceneEarlyException()
 
     def stop_skipping(self):
         self.virtual_animation_start_time = self.time
@@ -298,9 +303,8 @@ class Scene(object):
     def get_time_progression(self, run_time, n_iterations=None, desc="", override_skip_animations=False):
         if self.skip_animations and not override_skip_animations:
             return [run_time]
-        else:
-            step = 1 / self.camera.frame_rate
-            times = np.arange(0, run_time, step)
+        step = 1 / self.camera.frame_rate
+        times = np.arange(0, run_time, step)
 
         if self.file_writer.has_progress_display:
             self.file_writer.set_progress_display_subdescription(desc)
@@ -322,8 +326,7 @@ class Scene(object):
         description = f"{self.num_plays} {animations[0]}"
         if len(animations) > 1:
             description += ", etc."
-        time_progression = self.get_time_progression(run_time, desc=description)
-        return time_progression
+        return self.get_time_progression(run_time, desc=description)
 
     def get_wait_time_progression(self, duration, stop_condition=None):
         kw = {"desc": f"{self.num_plays} Waiting"}
@@ -474,7 +477,7 @@ class Scene(object):
 
     @handle_play_like_call
     def play(self, *args, **kwargs):
-        if len(args) == 0:
+        if not args:
             log.warning("Called Scene.play with no animations")
             return
         animations = self.anims_from_play_args(*args, **kwargs)

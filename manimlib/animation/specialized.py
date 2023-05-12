@@ -22,7 +22,7 @@ class Broadcast(LaggedStart):
     def __init__(self, focal_point, **kwargs):
         digest_config(self, kwargs)
         circles = VGroup()
-        for x in range(self.n_circles):
+        for _ in range(self.n_circles):
             circle = Circle(
                 radius=self.big_radius,
                 stroke_color=BLACK,

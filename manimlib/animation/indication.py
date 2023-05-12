@@ -168,10 +168,10 @@ class VShowPassingFlash(Animation):
         self.mobject.align_stroke_width_data_to_points()
         # Compute an array of stroke widths for each submobject
         # which tapers out at either end
-        self.submob_to_anchor_widths = dict()
+        self.submob_to_anchor_widths = {}
         for sm in self.mobject.get_family():
             original_widths = sm.get_stroke_widths()
-            anchor_widths = np.array([*original_widths[0::3], original_widths[-1]])
+            anchor_widths = np.array([*original_widths[::3], original_widths[-1]])
 
             def taper_kernel(x):
                 if x < self.taper_width:
@@ -201,9 +201,9 @@ class VShowPassingFlash(Animation):
         kernel_array = list(map(gauss_kernel, np.linspace(0, 1, len(anchor_widths))))
         scaled_widths = anchor_widths * kernel_array
         new_widths = np.zeros(submobject.get_num_points())
-        new_widths[0::3] = scaled_widths[:-1]
+        new_widths[::3] = scaled_widths[:-1]
         new_widths[2::3] = scaled_widths[1:]
-        new_widths[1::3] = (new_widths[0::3] + new_widths[2::3]) / 2
+        new_widths[1::3] = (new_widths[::3] + new_widths[2::3]) / 2
         submobject.set_stroke(width=new_widths)
 
     def finish(self):

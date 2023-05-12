@@ -403,10 +403,7 @@ class LinearTransformationScene(VectorScene):
         if new_label:
             label_mob.target_text = new_label
         else:
-            label_mob.target_text = "%s(%s)" % (
-                transformation_name,
-                label_mob.get_tex()
-            )
+            label_mob.target_text = f"{transformation_name}({label_mob.get_tex()})"
         label_mob.vector = vector
         label_mob.kwargs = kwargs
         if "animate" in label_mob.kwargs:

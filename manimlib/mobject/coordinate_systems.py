@@ -151,19 +151,15 @@ class CoordinateSystem():
     def input_to_graph_point(self, x, graph):
         if hasattr(graph, "underlying_function"):
             return self.coords_to_point(x, graph.underlying_function(x))
-        else:
-            alpha = binary_search(
-                function=lambda a: self.point_to_coords(
-                    graph.quick_point_from_proportion(a)
-                )[0],
-                target=x,
-                lower_bound=self.x_range[0],
-                upper_bound=self.x_range[1],
-            )
-            if alpha is not None:
-                return graph.quick_point_from_proportion(alpha)
-            else:
-                return None
+        alpha = binary_search(
+            function=lambda a: self.point_to_coords(
+                graph.quick_point_from_proportion(a)
+            )[0],
+            target=x,
+            lower_bound=self.x_range[0],
+            upper_bound=self.x_range[1],
+        )
+        return graph.quick_point_from_proportion(alpha) if alpha is not None else None
 
     def i2gp(self, x, graph):
         """
@@ -192,8 +188,8 @@ class CoordinateSystem():
                 if abs(pt[0]) < max_x and abs(pt[1]) < max_y:
                     x = x0
                     break
-            if x is None:
-                x = self.x_range[1]
+        if x is None:
+            x = self.x_range[1]
 
         point = self.input_to_graph_point(x, graph)
         angle = self.angle_of_tangent(x, graph)
@@ -329,10 +325,7 @@ class Axes(VGroup, CoordinateSystem):
         return result
 
     def point_to_coords(self, point):
-        return tuple([
-            axis.point_to_number(point)
-            for axis in self.get_axes()
-        ])
+        return tuple(axis.point_to_number(point) for axis in self.get_axes())
 
     def get_axes(self):
         return self.axes
@@ -535,14 +528,14 @@ class ComplexPlane(NumberPlane):
                 value = z.real
             number_mob = axis.get_number_mobject(value, **kwargs)
             # For i and -i, remove the "1"
-            if z.imag == 1:
-                number_mob.remove(number_mob[0])
             if z.imag == -1:
                 number_mob.remove(number_mob[1])
                 number_mob[0].next_to(
                     number_mob[1], LEFT,
                     buff=number_mob[0].get_width() / 4
                 )
+            elif z.imag == 1:
+                number_mob.remove(number_mob[0])
             self.coordinate_labels.add(number_mob)
         self.add(self.coordinate_labels)
         return self

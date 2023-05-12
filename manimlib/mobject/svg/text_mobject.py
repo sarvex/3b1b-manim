@@ -102,10 +102,9 @@ class Text(SVGMobject):
         self.set_submobjects(submobs)
 
     def find_indexes(self, word):
-        m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
-        if m:
-            start = int(m.group(1)) if m.group(1) != '' else 0
-            end = int(m.group(2)) if m.group(2) != '' else len(self.text)
+        if m := re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word):
+            start = int(m[1]) if m[1] != '' else 0
+            end = int(m[2]) if m[2] != '' else len(self.text)
             start = len(self.text) + start if start < 0 else start
             end = len(self.text) + end if end < 0 else end
             return [(start, end)]
@@ -125,10 +124,7 @@ class Text(SVGMobject):
 
     def get_part_by_text(self, word):
         parts = self.get_parts_by_text(word)
-        if len(parts) > 0:
-            return parts[0]
-        else:
-            return None
+        return parts[0] if len(parts) > 0 else None
 
     def full2short(self, config):
         for kwargs in [config, self.CONFIG]:
@@ -235,7 +231,7 @@ class Text(SVGMobject):
 
         dir_name = get_text_dir()
         hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) + '.svg'
+        file_name = f'{os.path.join(dir_name, hash_name)}.svg'
         if os.path.exists(file_name):
             return file_name
         settings = self.text2settings()
@@ -287,8 +283,7 @@ class MarkupText(SVGMobject):
         except ET.ParseError:
             # let pango handle that error
             pass
-        validate_error = MarkupUtils.validate(self.text)
-        if validate_error:
+        if validate_error := MarkupUtils.validate(self.text):
             raise ValueError(validate_error)
         file_name = self.text2svg()
         PangoUtils.remove_last_M(file_name)
@@ -322,9 +317,7 @@ class MarkupText(SVGMobject):
 
     def text2hash(self):
         """Generates ``sha256`` hash for file name."""
-        settings = (
-            "MARKUPPANGO" + self.font + self.slant + self.weight + self.color
-        )  # to differentiate from classical Pango Text
+        settings = f"MARKUPPANGO{self.font}{self.slant}{self.weight}{self.color}"
         settings += str(self.lsh) + str(self.font_size)
         settings += str(self.disable_ligatures)
         settings += str(self.justify)
@@ -341,13 +334,14 @@ class MarkupText(SVGMobject):
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
         hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) + ".svg"
+        file_name = f"{os.path.join(dir_name, hash_name)}.svg"
         if os.path.exists(file_name):
             return file_name
 
-        extra_kwargs = {}
-        extra_kwargs['justify'] = self.justify
-        extra_kwargs['pango_width'] = DEFAULT_PIXEL_WIDTH - 100
+        extra_kwargs = {
+            'justify': self.justify,
+            'pango_width': DEFAULT_PIXEL_WIDTH - 100,
+        }
         if self.lsh:
             extra_kwargs['line_spacing']=self.lsh
         return MarkupUtils.text2svg(
@@ -368,19 +362,13 @@ class MarkupText(SVGMobject):
 
     def _parse_color(self, col):
         """Parse color given in ``<color>`` or ``<gradient>`` tags."""
-        if re.match("#[0-9a-f]{6}", col):
-            return col
-        else:
-            return globals()[col.upper()] # this is hacky
+        return col if re.match("#[0-9a-f]{6}", col) else globals()[col.upper()]
 
     @functools.lru_cache(10)
     def get_text_from_markup(self, element=None):
         if not element:
             element = ET.fromstring(self.text_for_parsing)
-        final_text = ''
-        for i in element.itertext():
-            final_text += i
-        return final_text
+        return ''.join(element.itertext())
 
     def extract_color_tags(self, text=None, colormap = None):
         """Used to determine which parts (if any) of the string should be formatted
@@ -392,7 +380,7 @@ class MarkupText(SVGMobject):
         if not text:
             text = self.text_for_parsing
         if not colormap:
-            colormap = list()
+            colormap = []
         elements = ET.fromstring(text)
         text_from_markup = self.get_text_from_markup()
         final_xml = ET.fromstring(f'<span>{elements.text if elements.text else ""}</span>')
@@ -414,7 +402,7 @@ class MarkupText(SVGMobject):
                             "end_offset": end_offset,
                         }
                     )
-                    
+
                     _elements_list = list(element.iter())
                     if len(_elements_list) <= 1:
                         final_xml.append(ET.fromstring(f'<span>{element.text if element.text else ""}</span>'))
@@ -425,6 +413,7 @@ class MarkupText(SVGMobject):
                         final_xml.append(element)
                     else:
                         get_color_map(element)
+
         get_color_map(elements)
         with io.BytesIO() as f:
             tree = ET.ElementTree()  
@@ -442,7 +431,7 @@ class MarkupText(SVGMobject):
         if not text:
             text = self.text_for_parsing
         if not gradientmap:
-            gradientmap = list()
+            gradientmap = []
 
         elements = ET.fromstring(text)
         text_from_markup = self.get_text_from_markup()
@@ -476,6 +465,7 @@ class MarkupText(SVGMobject):
                         final_xml.append(element)
                     else:
                         get_gradient_map(element)
+
         get_gradient_map(elements)
         with io.BytesIO() as f:
             tree = ET.ElementTree()  
@@ -524,9 +514,9 @@ class Code(Text):
             t2s[range_str] = ITALIC if style_dict["italic"] else NORMAL
             t2w[range_str] = BOLD if style_dict["bold"] else NORMAL
             start_index = end_index
-        t2c.update(self.t2c)
-        t2s.update(self.t2s)
-        t2w.update(self.t2w)
+        t2c |= self.t2c
+        t2s |= self.t2s
+        t2w |= self.t2w
         kwargs["t2c"] = t2c
         kwargs["t2s"] = t2s
         kwargs["t2w"] = t2w
